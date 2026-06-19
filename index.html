@@ -329,14 +329,14 @@
       <div class="form-card">
         <h3>Request a Free Consultation</h3>
         <p class="sub">Fill this out and Greg will reach out within 24 hours — no pressure, no obligation.</p>
-        <form method="POST" action="https://formsubmit.co/ajax/7greenojos@gmail.com" id="leadForm">
-          <input type="hidden" name="_subject" value="New lead from dayandnightsservices.com" />
-          <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_captcha" value="false" />
+        <form method="POST" action="https://script.google.com/macros/s/AKfycbxfravADsiQdeXADnD8mUf4sio6xEdJDn8SQ9aVb4bZ7KGJWLivvztfoY4Pvx6tNCCTJw/exec" id="leadForm">
+          <input type="hidden" name="source" value="Day & Night Services" />
           <p class="hp"><label>Don't fill this out: <input name="_honey" /></label></p>
           <div class="field"><label for="name">Full name</label><input id="name" name="name" required placeholder="Your name" /></div>
           <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" required placeholder="(831) 555-0123" /></div>
           <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required placeholder="you@email.com" /></div>
+          <div class="field"><label for="age">Age</label><input id="age" name="age" type="number" min="0" placeholder="Your age" /></div>
+          <div class="field"><label for="address">Address</label><input id="address" name="address" placeholder="Street, City, State, ZIP" /></div>
           <div class="field"><label for="interest">I'm interested in</label>
             <select id="interest" name="interest">
               <option>Life Insurance (IUL / Whole Life)</option>
@@ -377,7 +377,7 @@
   if (f) f.addEventListener('submit', function(e){
     e.preventDefault();
     var data = new URLSearchParams(new FormData(f)).toString();
-    fetch(f.action, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'}, body:data})
+    fetch(f.action, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:data})
       .then(function(){ f.style.display='none'; document.getElementById('thanks').style.display='block'; })
       .catch(function(){ f.style.display='none'; document.getElementById('thanks').style.display='block'; });
   });
