@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google Analytics 4. The July 2026 redesign dropped the tag that was on the
+     previous site, so the site ran with no measurement at all — which is part of why
+     a broken lead form went unnoticed. Disclosed in the privacy policy. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K7C1YNRXS3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-K7C1YNRXS3');
+</script>
 <title>Day &amp; Night Services | Life Insurance, Living Trusts &amp; Retirement Income — Greg Jimenez, CA</title>
 <meta name="description" content="Licensed California life insurance broker Greg Jimenez. IUL, annuities, whole life, final expense, 401k rollovers, and complete estate planning (living trust, will, powers of attorney). Free, no-pressure consultation. Call or text 831-262-6374.">
 <meta name="keywords" content="life insurance, IUL, indexed universal life, annuities, final expense, 401k rollover, living trust, estate planning, veterans insurance, Salinas, California, Greg Jimenez">
@@ -406,6 +416,20 @@ document.getElementById('leadform').addEventListener('submit', function(e){
   }).then(function(j){
     if (!j || String(j.success) === 'false') {
       throw new Error(j && j.message ? j.message : 'Submission rejected');
+    }
+    // Conversion event. Only fires on a submission FormSubmit actually accepted, so
+    // the number in GA equals real delivered leads — not attempts. The parameters are
+    // the qualification data, so lead QUALITY can be compared by source, not just volume.
+    if (window.gtag) {
+      try {
+        gtag('event', 'generate_lead', {
+          product_interest: f.interest.value,
+          lead_age: f.age.value || 'not given',
+          sms_opt_in: granted ? 'yes' : 'no',
+          gave_email: f.email.value ? 'yes' : 'no',
+          wrote_message: f.message.value ? 'yes' : 'no'
+        });
+      } catch(e){}
     }
     document.getElementById('formok').style.display='block';
     f.querySelectorAll('input,select,textarea,button').forEach(function(el){el.disabled=true;});
