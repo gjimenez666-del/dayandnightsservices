@@ -140,6 +140,8 @@
   .consent-note{font-size:12px;color:var(--mut);margin-top:9px;line-height:1.5;}
   .formbtn{width:100%;margin-top:18px;justify-content:center;}
   .ok{display:none;background:#e9f9ee;border:1.5px solid #7fd49a;color:#186a34;border-radius:10px;padding:13px;margin-top:14px;font-weight:600;font-size:15px;}
+  .fail{display:none;background:#fdecec;border:1.5px solid #f0a3a3;color:#8a1c1c;border-radius:10px;padding:13px;margin-top:14px;font-weight:600;font-size:15px;line-height:1.5;}
+  .fail a{color:#8a1c1c;text-decoration:underline;}
   /* footer */
   footer{background:#081120;color:#8fa3bd;text-align:center;padding:36px 20px 110px;font-size:13.5px;line-height:1.8;}
   footer a{color:#c9d7ea;text-decoration:none;}
@@ -350,6 +352,7 @@
         <div class="consent-note">Optional — consent to texts is <strong>not</strong> required to request a consultation or to purchase anything. Leave it unchecked and Greg will contact you by phone or email instead.</div>
         <button class="btn formbtn" type="submit">Request My Free Consultation</button>
         <div class="ok" id="formok">✅ Thank you! Your request is in — Greg will reach out within 24 hours.</div>
+        <div class="fail" id="formfail">⚠️ Sorry — that didn't go through. Please call or text <a href="tel:8312626374">831-262-6374</a>, or email <a href="mailto:greg@dayandnightsservices.com?subject=Consultation%20Request">greg@dayandnightsservices.com</a> and Greg will get right back to you.</div>
       </form>
     </div>
   </div>
@@ -395,13 +398,30 @@ document.getElementById('leadform').addEventListener('submit', function(e){
     method: 'POST',
     headers: {'Content-Type':'application/json','Accept':'application/json'},
     body: JSON.stringify(data)
-  }).then(function(){
+  }).then(function(r){
+    // FormSubmit returns HTTP 200 even when it rejects the submission (for example
+    // "This form needs Activation"). Treating 200 as success told visitors their
+    // request was received while the lead was silently discarded. Read the body.
+    return r.json().catch(function(){ return { success: String(r.ok) }; });
+  }).then(function(j){
+    if (!j || String(j.success) === 'false') {
+      throw new Error(j && j.message ? j.message : 'Submission rejected');
+    }
     document.getElementById('formok').style.display='block';
     f.querySelectorAll('input,select,textarea,button').forEach(function(el){el.disabled=true;});
     btn.textContent='Request Sent ✓';
-  }).catch(function(){
+  }).catch(function(err){
+    // Never tell someone we received their request when we did not. Surface it and
+    // hand them a route that cannot fail.
+    if (window.gtag) { try { gtag('event','lead_form_failure',{ description:String(err && err.message) }); } catch(e){} }
     btn.disabled=false; btn.textContent='Request My Free Consultation';
-    window.location.href='mailto:greg@dayandnightsservices.com?subject=Consultation%20Request';
+    var warn = document.getElementById('formfail');
+    if (warn) {
+      warn.style.display='block';
+      warn.scrollIntoView({block:'center', behavior:'smooth'});
+    } else {
+      window.location.href='mailto:greg@dayandnightsservices.com?subject=Consultation%20Request';
+    }
   });
 });
 </script>
