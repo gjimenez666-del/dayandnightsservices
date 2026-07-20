@@ -386,7 +386,7 @@
         <textarea id="f-msg" name="message" rows="3"></textarea>
         <div class="consent">
           <input type="checkbox" id="f-sms" name="sms_consent" value="yes">
-          <label for="f-sms">By checking this box, you agree to receive text messages from <strong>Day &amp; Night Services LLC</strong> about your consultation request, appointment scheduling, and related follow-up. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="privacy.html">Privacy Policy</a> and <a href="terms.html">Terms</a>.</label>
+          <label for="f-sms">By checking this box, you agree that <strong>Day &amp; Night Services LLC</strong> may call or text you at the number provided &mdash; including through automated technology &mdash; about your consultation request, appointments, and insurance products or services you asked about. Consent is not a condition of purchasing any product or service. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="privacy.html">Privacy Policy</a> and <a href="terms.html">Terms</a>.</label>
         </div>
         <div class="consent-note">Optional — consent to texts is <strong>not</strong> required to request a consultation or to purchase anything. Leave it unchecked and Greg will contact you by phone or email instead.</div>
         <button class="btn formbtn" type="submit">Request My Free Consultation</button>
@@ -424,15 +424,30 @@ document.getElementById('leadform').addEventListener('submit', function(e){
   var box = document.getElementById('f-sms');
   var granted = !!(box && box.checked);
   var disclosure = box ? (document.querySelector('label[for="f-sms"]').innerText || '').replace(/\s+/g, ' ').trim() : '';
+  // Submission id so a consent event can be matched to one specific submission when
+  // the records move into a CRM. Not cryptographic — just unique enough to join on.
+  var subId = 'DNS-' + Date.now().toString(36) + '-' +
+              Math.random().toString(36).slice(2, 8).toUpperCase();
   var data = {
     name: f.name.value, phone: f.phone.value, email: f.email.value,
     age: f.age.value, interest: f.interest.value, message: f.message.value,
     timeline: f.timeline.value || 'not given',
     trigger: f.trigger.value || 'not given',
+    submission_id: subId,
     sms_consent: granted ? 'YES — opted in to SMS' : 'NO — did not opt in to SMS. Do not text this lead.',
     sms_consent_timestamp: granted ? new Date().toISOString() : '',
     sms_consent_language_shown: granted ? disclosure : '',
     sms_consent_page: granted ? window.location.href : '',
+    // Version the disclosure so a future wording change can be told apart from this
+    // one. Bump this string whenever the label text above changes.
+    sms_consent_version: granted ? 'DNS-SMS-CONSENT-v2-2026-07-20' : '',
+    // The box ships unchecked in the HTML; recording that here makes the "it was not
+    // pre-checked" claim provable from the record itself rather than from memory.
+    sms_consent_default_state: granted ? 'unchecked by default; checked by user' : '',
+    sms_consent_user_agent: granted ? navigator.userAgent : '',
+    // NOTE: the visitor's IP address cannot be captured in the browser. FormSubmit does
+    // not return it either. Closing that gap needs a server-side or CRM form endpoint —
+    // tracked in legal/operating-rules.md.
     // Surface urgency in the subject line so a ready-to-buy lead is obvious in the
     // inbox without opening it.
     _subject: 'New Day & Night consultation request'
