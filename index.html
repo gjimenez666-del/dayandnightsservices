@@ -353,6 +353,35 @@
           <option>Veterans Coverage</option>
           <option>Not sure yet — just exploring</option>
         </select>
+        <!-- Qualification. Two selects, not free text — so the answers are comparable
+             in GA and sortable at a glance in the lead email. Timeline separates a buyer
+             from a browser; trigger is the single best opener on the first call. -->
+        <div class="frow">
+          <div>
+            <label for="f-when">When are you looking to have this in place?</label>
+            <select id="f-when" name="timeline">
+              <option value="">Select one…</option>
+              <option>As soon as possible</option>
+              <option>Within 1–3 months</option>
+              <option>3–6 months</option>
+              <option>Just researching for now</option>
+            </select>
+          </div>
+          <div>
+            <label for="f-why">What made you look into this now?</label>
+            <select id="f-why" name="trigger">
+              <option value="">Select one…</option>
+              <option>New baby or growing family</option>
+              <option>Got married</option>
+              <option>Bought a home</option>
+              <option>New job or career change</option>
+              <option>Approaching retirement</option>
+              <option>Someone close to me passed away</option>
+              <option>My current coverage isn't enough</option>
+              <option>Just planning ahead</option>
+            </select>
+          </div>
+        </div>
         <label for="f-msg">Anything else? (optional)</label>
         <textarea id="f-msg" name="message" rows="3"></textarea>
         <div class="consent">
@@ -398,11 +427,17 @@ document.getElementById('leadform').addEventListener('submit', function(e){
   var data = {
     name: f.name.value, phone: f.phone.value, email: f.email.value,
     age: f.age.value, interest: f.interest.value, message: f.message.value,
+    timeline: f.timeline.value || 'not given',
+    trigger: f.trigger.value || 'not given',
     sms_consent: granted ? 'YES — opted in to SMS' : 'NO — did not opt in to SMS. Do not text this lead.',
     sms_consent_timestamp: granted ? new Date().toISOString() : '',
     sms_consent_language_shown: granted ? disclosure : '',
     sms_consent_page: granted ? window.location.href : '',
-    _subject: 'New Day & Night consultation request' + (granted ? ' [SMS OK]' : ' [NO SMS]')
+    // Surface urgency in the subject line so a ready-to-buy lead is obvious in the
+    // inbox without opening it.
+    _subject: 'New Day & Night consultation request'
+      + (f.timeline.value === 'As soon as possible' ? ' [HOT]' : '')
+      + (granted ? ' [SMS OK]' : ' [NO SMS]')
   };
   fetch('https://formsubmit.co/ajax/7greenojos@gmail.com', {
     method: 'POST',
@@ -424,6 +459,8 @@ document.getElementById('leadform').addEventListener('submit', function(e){
       try {
         gtag('event', 'generate_lead', {
           product_interest: f.interest.value,
+          lead_timeline: f.timeline.value || 'not given',
+          lead_trigger: f.trigger.value || 'not given',
           lead_age: f.age.value || 'not given',
           sms_opt_in: granted ? 'yes' : 'no',
           gave_email: f.email.value ? 'yes' : 'no',
