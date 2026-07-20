@@ -132,6 +132,12 @@
   input,select,textarea{width:100%;padding:12px 14px;border:1.5px solid #d5dfe9;border-radius:10px;font-size:15px;font-family:inherit;background:#fbfdff;}
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);}
   .hp{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden;}
+  /* SMS consent — must render as an unchecked box with the disclosure fully visible */
+  .consent{display:flex;gap:11px;align-items:flex-start;margin-top:16px;padding:13px 14px;background:#f6f9fc;border:1px solid var(--line);border-radius:10px;}
+  .consent input[type=checkbox]{width:19px;height:19px;min-width:19px;margin-top:2px;accent-color:var(--blue);cursor:pointer;}
+  .consent label{font-size:12.5px;font-weight:500;color:var(--mut);line-height:1.55;margin:0;display:inline;cursor:pointer;}
+  .consent a{color:var(--blue);text-decoration:underline;}
+  .consent-note{font-size:12px;color:var(--mut);margin-top:9px;line-height:1.5;}
   .formbtn{width:100%;margin-top:18px;justify-content:center;}
   .ok{display:none;background:#e9f9ee;border:1.5px solid #7fd49a;color:#186a34;border-radius:10px;padding:13px;margin-top:14px;font-weight:600;font-size:15px;}
   /* footer */
@@ -337,6 +343,11 @@
         </select>
         <label for="f-msg">Anything else? (optional)</label>
         <textarea id="f-msg" name="message" rows="3"></textarea>
+        <div class="consent">
+          <input type="checkbox" id="f-sms" name="sms_consent" value="yes">
+          <label for="f-sms">By checking this box, you agree to receive text messages from <strong>Day &amp; Night Services LLC</strong> about your consultation request, appointment scheduling, and related follow-up. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="privacy.html">Privacy Policy</a> and <a href="terms.html">Terms</a>.</label>
+        </div>
+        <div class="consent-note">Optional — consent to texts is <strong>not</strong> required to request a consultation or to purchase anything. Leave it unchecked and Greg will contact you by phone or email instead.</div>
         <button class="btn formbtn" type="submit">Request My Free Consultation</button>
         <div class="ok" id="formok">✅ Thank you! Your request is in — Greg will reach out within 24 hours.</div>
       </form>
@@ -347,7 +358,8 @@
 <footer>
   © 2026 Day &amp; Night Services LLC — Greg Jimenez · Salinas, California<br>
   CA Life License #4423937 · NPN 21428854 · Independent Broker<br>
-  <a href="tel:8312626374">831-262-6374</a> · <a href="mailto:greg@dayandnightsservices.com">greg@dayandnightsservices.com</a> · <a href="https://wa.me/18312626374">WhatsApp</a> · <a href="https://agents.ethoslife.com/invite/80edf">Instant Quote</a>
+  <a href="tel:8312626374">831-262-6374</a> · <a href="mailto:greg@dayandnightsservices.com">greg@dayandnightsservices.com</a> · <a href="https://wa.me/18312626374">WhatsApp</a> · <a href="https://agents.ethoslife.com/invite/80edf">Instant Quote</a><br>
+  <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a>
 </footer>
 
 <div class="stickybar">
@@ -364,10 +376,20 @@ document.getElementById('leadform').addEventListener('submit', function(e){
   var f = e.target, btn = f.querySelector('button');
   if (f._honey && f._honey.value) return;
   btn.disabled = true; btn.textContent = 'Sending…';
+  // Record of consent. If this ever has to be defended, what matters is proving
+  // WHAT the person agreed to and WHEN — so capture the exact disclosure text
+  // shown at submit time, not just a yes/no flag.
+  var box = document.getElementById('f-sms');
+  var granted = !!(box && box.checked);
+  var disclosure = box ? (document.querySelector('label[for="f-sms"]').innerText || '').replace(/\s+/g, ' ').trim() : '';
   var data = {
     name: f.name.value, phone: f.phone.value, email: f.email.value,
     age: f.age.value, interest: f.interest.value, message: f.message.value,
-    _subject: 'New Day & Night consultation request'
+    sms_consent: granted ? 'YES — opted in to SMS' : 'NO — did not opt in to SMS. Do not text this lead.',
+    sms_consent_timestamp: granted ? new Date().toISOString() : '',
+    sms_consent_language_shown: granted ? disclosure : '',
+    sms_consent_page: granted ? window.location.href : '',
+    _subject: 'New Day & Night consultation request' + (granted ? ' [SMS OK]' : ' [NO SMS]')
   };
   fetch('https://formsubmit.co/ajax/7greenojos@gmail.com', {
     method: 'POST',
